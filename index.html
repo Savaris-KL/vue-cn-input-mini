@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lazy Input</title>
+  </head>
+  <body>
+    <input type="text" trim />
+  </body>
+  <script>
+    const dom = document.querySelector("input");
+    const lazy = dom.getAttribute("lazy") != void 0;
+    const trim = dom.getAttribute("trim") != void 0;
+    addEventListener(dom, lazy ? "change" : "input", function (e) {
+      // update component
+    });
+    if (!lazy) {
+      addEventListener(dom, "compositionstart", onCompositionStart);
+      addEventListener(dom, "compositionend", onCompositionEnd);
+      // Safari < 10.2 & UIWebView doesn't fire compositionend when
+      // switching focus before confirming composition choice
+      // this also fixes the issue where some browsers e.g. iOS Chrome
+      // fires "change" instead of "input" on autocomplete.
+      addEventListener(dom, "change", onCompositionEnd); // 某些浏览器不支持compositionend，通过切换聚焦触发onchange，完成最终输入
+    }
+
+    function addEventListener(el, event, handler, options) {
+      el.addEventListener(event, handler, options);
+    }
+
+    function onCompositionStart(e) {
+      console.log(`compostion start`);
+      e.target.composing = true;
+    }
+
+    function onCompositionEnd(e) {
+      const target = e.target;
+      if (target.composing) {
+        console.log(`compostion end`);
+        target.composing = false;
+        trigger(target, "input");
+      }
+    }
+
+    function trigger(el, type) {
+      const e = document.createEvent("HTMLEvents");
+      e.initEvent(type, true, true);
+      el.dispatchEvent(e);
+    }
+  </script>
+</html>
